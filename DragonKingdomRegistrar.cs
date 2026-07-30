@@ -109,7 +109,7 @@ namespace DragonKeep
                                       // 15.
             new DragonKingdomRegistration("DP_B_Throne","Dragon Throne Large", new[]{
                 new RequirementConfig("Stone",250), new RequirementConfig("Iron",100), new RequirementConfig("Resin",40)
-            },"","dragonkingdom large throne"),
+            },"","dragonkingdom"),
         };
 
         public static IEnumerable<string> GetAllCategories() =>
@@ -177,8 +177,8 @@ namespace DragonKeep
 
             GameObject vfxPlace = ZNetScene.instance?.GetPrefab("vfx_Place_stone");
             GameObject sfxPlace = ZNetScene.instance?.GetPrefab("sfx_build_hammer_stone");
-            GameObject destroyVFX = ZNetScene.instance?.GetPrefab("vfx_destroyed");
-            GameObject destroySFX = ZNetScene.instance?.GetPrefab("sfx_rock_destroyed");
+            GameObject destroyVFX = PrefabManager.Cache.GetPrefab<GameObject>("vfx_destroyed");
+            GameObject destroySFX = PrefabManager.Cache.GetPrefab<GameObject>("sfx_rock_destroyed");
 
             var placeFX = new EffectList();
             var placeList = new List<EffectList.EffectData>();
@@ -187,12 +187,17 @@ namespace DragonKeep
             placeFX.m_effectPrefabs = placeList.ToArray();
             piece.m_placeEffect = placeFX;
 
-            WearNTear wear = prefab.GetComponent<WearNTear>();
-            if (wear != null)
+            WearNTear wear = prefab.GetComponent<WearNTear>() ?? prefab.AddComponent<WearNTear>();
+            wear.m_health = 1000000000f;
+            wear.m_noRoofWear = true;
+            wear.m_noSupportWear = true;
+            wear.m_supports = true;
+            wear.m_autoCreateFragments = true;
+            if (wear.m_fragmentRoots == null)
             {
-                wear.m_health = 1000000f;
-                wear.m_noRoofWear = true;
+                wear.m_fragmentRoots = new GameObject[0];
             }
+            MakeWearNTearImmune(wear);
 
             Destructible destructible = prefab.GetComponent<Destructible>();
             if (destructible != null)
@@ -298,7 +303,7 @@ namespace DragonKeep
             RemoveComponentsInChildren<Destructible>(prefab);
             RemoveComponentsInChildren<TreeLog>(prefab);
             RemoveComponentsInChildren<Plant>(prefab);
-            RemoveComponentsInChildren<WearNTear>(prefab);
+            RemoveComponentsInChildrenExceptRoot<WearNTear>(prefab);
             RemoveComponentsInChildren<Rigidbody>(prefab);
             RemoveComponentsInChildren<TreeBase>(prefab);
             RemoveComponentsInChildren<StaticPhysics>(prefab);
@@ -515,6 +520,42 @@ namespace DragonKeep
             }
         }
 
+        private static void RemoveComponentsInChildrenExceptRoot<T>(GameObject root) where T : Component
+        {
+            if (root == null)
+            {
+                return;
+            }
+
+            T[] components = root.GetComponentsInChildren<T>(true);
+            for (int i = 0; i < components.Length; i++)
+            {
+                if (components[i] != null && components[i].gameObject != root)
+                {
+                    UnityEngine.Object.DestroyImmediate(components[i], true);
+                }
+            }
+        }
+
+        private static void MakeWearNTearImmune(WearNTear wear)
+        {
+            if (wear == null)
+            {
+                return;
+            }
+
+            wear.m_damages.m_blunt = HitData.DamageModifier.Immune;
+            wear.m_damages.m_slash = HitData.DamageModifier.Immune;
+            wear.m_damages.m_pierce = HitData.DamageModifier.Immune;
+            wear.m_damages.m_chop = HitData.DamageModifier.Immune;
+            wear.m_damages.m_pickaxe = HitData.DamageModifier.Immune;
+            wear.m_damages.m_fire = HitData.DamageModifier.Immune;
+            wear.m_damages.m_frost = HitData.DamageModifier.Immune;
+            wear.m_damages.m_lightning = HitData.DamageModifier.Immune;
+            wear.m_damages.m_poison = HitData.DamageModifier.Immune;
+            wear.m_damages.m_spirit = HitData.DamageModifier.Immune;
+        }
+
         private static void ConfigureDragonPenDoors(GameObject prefab, ZNetView rootZNetView, AssetBundle bundle, bool configureGroundDoors, bool configureRoofDoor)
         {
             if (prefab == null || rootZNetView == null) return;
@@ -529,8 +570,6 @@ namespace DragonKeep
 
             GameObject mainGateOpenSfx = bundle != null ? bundle.LoadAsset<GameObject>("sfx_M_Dragongate_Open") : null;
             GameObject mainGateCloseSfx = bundle != null ? bundle.LoadAsset<GameObject>("sfx_M_Dragongate_Close") : null;
-            GameObject smallDoorOpenSfx = bundle != null ? bundle.LoadAsset<GameObject>("v2_sfx_door_open") : null;
-            GameObject smallDoorCloseSfx = bundle != null ? bundle.LoadAsset<GameObject>("v2_sfx_door_close") : null;
 
             if (configureGroundDoors && mainGateOpenSfx == null)
             {
@@ -540,16 +579,6 @@ namespace DragonKeep
             if (configureGroundDoors && mainGateCloseSfx == null)
             {
                 Debug.LogWarning("[DragonKeep] Missing DragonPen main gate close SFX prefab: sfx_M_Dragongate_Close");
-            }
-
-            if ((configureGroundDoors || configureRoofDoor) && smallDoorOpenSfx == null)
-            {
-                Debug.LogWarning("[DragonKeep] Missing DragonPen small door open SFX prefab: v2_sfx_door_open");
-            }
-
-            if ((configureGroundDoors || configureRoofDoor) && smallDoorCloseSfx == null)
-            {
-                Debug.LogWarning("[DragonKeep] Missing DragonPen small door close SFX prefab: v2_sfx_door_close");
             }
 
             if (configureGroundDoors)
@@ -582,7 +611,7 @@ namespace DragonKeep
                     }
                     else
                     {
-                        ConfigureChildDoor(doorTransform.gameObject, rootZNetView, doorName, smallDoorOpenSfx, smallDoorCloseSfx);
+                        ConfigureChildDoor(doorTransform.gameObject, rootZNetView, doorName, null, null);
                     }
                 }
             }
@@ -596,7 +625,7 @@ namespace DragonKeep
                 }
                 else
                 {
-                    CustomChildDoor roofDoor = ConfigureChildDoor(roofDoorTransform.gameObject, rootZNetView, "Roof_Door", smallDoorOpenSfx, smallDoorCloseSfx);
+                    CustomChildDoor roofDoor = ConfigureChildDoor(roofDoorTransform.gameObject, rootZNetView, "Roof_Door", null, null);
 
                     if (roofDoor != null)
                     {
@@ -639,9 +668,9 @@ namespace DragonKeep
                 customDoor.m_invertedOpenClosedText = sourceDoor.m_invertedOpenClosedText;
                 customDoor.m_checkGuardStone = sourceDoor.m_checkGuardStone;
                 customDoor.m_openEnable = sourceDoor.m_openEnable;
-                customDoor.m_openEffects = sourceDoor.m_openEffects;
-                customDoor.m_closeEffects = sourceDoor.m_closeEffects;
-                customDoor.m_lockedEffects = sourceDoor.m_lockedEffects;
+                customDoor.m_openEffects = CopyEffectList(sourceDoor.m_openEffects);
+                customDoor.m_closeEffects = CopyEffectList(sourceDoor.m_closeEffects);
+                customDoor.m_lockedEffects = CopyEffectList(sourceDoor.m_lockedEffects);
             }
             else
             {
@@ -681,19 +710,6 @@ namespace DragonKeep
                 }
             }
 
-            GameObject smallDoorOpenSfx = bundle != null ? bundle.LoadAsset<GameObject>("v2_sfx_door_open") : null;
-            GameObject smallDoorCloseSfx = bundle != null ? bundle.LoadAsset<GameObject>("v2_sfx_door_close") : null;
-
-            if (smallDoorOpenSfx == null)
-            {
-                Debug.LogWarning("[DragonKeep] Missing Corner Tower door open SFX prefab: v2_sfx_door_open");
-            }
-
-            if (smallDoorCloseSfx == null)
-            {
-                Debug.LogWarning("[DragonKeep] Missing Corner Tower door close SFX prefab: v2_sfx_door_close");
-            }
-
             string[] doorNames =
             {
                 "Left_F",
@@ -709,8 +725,17 @@ namespace DragonKeep
                     continue;
                 }
 
-                ConfigureChildDoor(doorTransform.gameObject, rootZNetView, doorName, smallDoorOpenSfx, smallDoorCloseSfx);
+                ConfigureChildDoor(doorTransform.gameObject, rootZNetView, doorName, null, null);
             }
+        }
+
+        private static EffectList CopyEffectList(EffectList source)
+        {
+            EffectList copy = new EffectList();
+            copy.m_effectPrefabs = source?.m_effectPrefabs != null
+                ? source.m_effectPrefabs.ToArray()
+                : new EffectList.EffectData[0];
+            return copy;
         }
 
         private static EffectList CreateSingleEffectList(GameObject effectPrefab)
