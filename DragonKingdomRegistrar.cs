@@ -730,12 +730,12 @@ namespace DragonKeep
 
             if (openEffects != null)
             {
-                customDoor.m_openEffects = CopyEffectList(openEffects);
+                customDoor.m_openEffects = CreatePlayableDoorEffectList(openEffects);
             }
 
             if (closeEffects != null)
             {
-                customDoor.m_closeEffects = CopyEffectList(closeEffects);
+                customDoor.m_closeEffects = CreatePlayableDoorEffectList(closeEffects);
             }
 
             return customDoor;
@@ -838,6 +838,33 @@ namespace DragonKeep
 
                 ConfigureVanillaChildDoor(doorTransform.gameObject, rootZNetView, doorName, vanillaDoorOpenEffects, vanillaDoorCloseEffects);
             }
+        }
+
+        private static EffectList CreatePlayableDoorEffectList(EffectList source)
+        {
+            EffectList playableEffects = new EffectList();
+            List<EffectList.EffectData> effectPrefabs = new List<EffectList.EffectData>();
+
+            if (source?.m_effectPrefabs != null)
+            {
+                foreach (EffectList.EffectData sourceEffect in source.m_effectPrefabs)
+                {
+                    if (sourceEffect == null || sourceEffect.m_prefab == null)
+                    {
+                        continue;
+                    }
+
+                    effectPrefabs.Add(new EffectList.EffectData
+                    {
+                        m_prefab = sourceEffect.m_prefab,
+                        m_enabled = true,
+                        m_variant = -1
+                    });
+                }
+            }
+
+            playableEffects.m_effectPrefabs = effectPrefabs.ToArray();
+            return playableEffects;
         }
 
         private static EffectList CopyEffectList(EffectList source)
