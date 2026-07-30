@@ -37,18 +37,18 @@ namespace DragonKeep
             // ---------------------- Dragon Kingdom ----------------------
 
             // 1.
-            new DragonKingdomRegistration("DP_DragonPen","Dragon Pen", new[]{
-                new RequirementConfig("Iron",100), new RequirementConfig("Wood",200), new RequirementConfig("Resin",50)
+            new DragonKingdomRegistration("DP_DragonPen","Dragon Pen With Roof", new[]{
+                new RequirementConfig("Iron",400), new RequirementConfig("RoundLog",400), new RequirementConfig("Obsidian",400), new RequirementConfig("Coins",5000)
             },"","dragonkingdom"),
 
             // 2.
-            new DragonKingdomRegistration("DP_DragonPen_Base","Dragon Pen no roof", new[]{
-                new RequirementConfig("Iron",50), new RequirementConfig("Wood",100), new RequirementConfig("Resin",40)
+            new DragonKingdomRegistration("DP_DragonPen_Base","Dragon Pen Without Roof", new[]{
+                new RequirementConfig("Iron",400), new RequirementConfig("RoundLog",400), new RequirementConfig("Obsidian",400), new RequirementConfig("Coins",4000)
             },"","dragonkingdom"),
 
             // 3.
-            new DragonKingdomRegistration("DP_Roof","Dragon Pen roof", new[]{
-                new RequirementConfig("Iron",50), new RequirementConfig("Wood",100), new RequirementConfig("Resin",40)
+            new DragonKingdomRegistration("DP_Roof","Dragon Pen Roof", new[]{
+                new RequirementConfig("Bronze",40), new RequirementConfig("FineWood",100), new RequirementConfig("Crystal",200), new RequirementConfig("Resin",400)
             },"","dragonkingdom"),
 
             // 4.
@@ -58,57 +58,57 @@ namespace DragonKeep
 
             // 5.
             new DragonKingdomRegistration("DP_Original_Wall","Dragon Pen Wall", new[]{
-                new RequirementConfig("Iron",50), new RequirementConfig("Wood",100), new RequirementConfig("Resin",40)
+                new RequirementConfig("Obsidian",8), new RequirementConfig("Stone",8)
             },"","dragonkingdom"),
 
             // 6.
             new DragonKingdomRegistration("DP_Original_High_Wall","Dragon Pen Original High Wall", new[]{
-                new RequirementConfig("Iron",50), new RequirementConfig("Wood",100), new RequirementConfig("Resin",40)
+                new RequirementConfig("Obsidian",20), new RequirementConfig("Stone",20), new RequirementConfig("Iron",20), new RequirementConfig("RoundLog",20)
             },"","dragonkingdom"),
 
             // 7.
             new DragonKingdomRegistration("DP_6m_Wall","Dragon Pen 6m Wall", new[]{
-                new RequirementConfig("Iron",50), new RequirementConfig("Wood",100), new RequirementConfig("Resin",40)
+                new RequirementConfig("Obsidian",20), new RequirementConfig("Stone",20)
             },"","dragonkingdom"),
 
             // 8.
             new DragonKingdomRegistration("DP_2m_Wall","Dragon Pen Short Wall", new[]{
-                new RequirementConfig("Iron",50), new RequirementConfig("Wood",100), new RequirementConfig("Resin",40)
+                new RequirementConfig("Obsidian",2), new RequirementConfig("Stone",2)
             },"","dragonkingdom"),
 
             // 9.
             new DragonKingdomRegistration("DP_Castle_Tower","Dragon Pen Castle Tower", new[]{
-                new RequirementConfig("Iron",50), new RequirementConfig("Wood",100), new RequirementConfig("Resin",40)
+                new RequirementConfig("Obsidian",100), new RequirementConfig("Stone",100), new RequirementConfig("Crystal",10), new RequirementConfig("Coins",210)
             },"","dragonkingdom"),
 
             // 10.
             new DragonKingdomRegistration("DP_Corner_Tower","Dragon Pen Corner Tower", new[]{
-                new RequirementConfig("Iron",50), new RequirementConfig("Wood",100), new RequirementConfig("Resin",40)
+                new RequirementConfig("Iron",50), new RequirementConfig("Stone",50), new RequirementConfig("RoundLog",50), new RequirementConfig("Coins",150)
             },"","dragonkingdom"),
 
                         // 11.
             new DragonKingdomRegistration("DP_Corner_Piece","Dragon Pen Corner Piece", new[]{
-                new RequirementConfig("Iron",50), new RequirementConfig("Wood",100), new RequirementConfig("Resin",40)
+                new RequirementConfig("Obsidian",10)
             },"","dragonkingdom"),
 
                                     // 12.
             new DragonKingdomRegistration("DP_Corner_Piece_Small","Dragon Pen Small Corner Piece", new[]{
-                new RequirementConfig("Iron",50), new RequirementConfig("Wood",100), new RequirementConfig("Resin",40)
+                new RequirementConfig("Obsidian",5)
             },"","dragonkingdom"),
 
                                                 // 13.
             new DragonKingdomRegistration("DP_Gate","Dragon Pen Main Gate", new[]{
-                new RequirementConfig("Iron",50), new RequirementConfig("Wood",100), new RequirementConfig("Resin",40)
+                new RequirementConfig("Obsidian",50), new RequirementConfig("Iron",100), new RequirementConfig("RoundLog",100), new RequirementConfig("Coins",250)
             },"","dragonkingdom"),
 
                           // 14.
-            new DragonKingdomRegistration("DP_Throne","Dragon Throne", new[]{
-                new RequirementConfig("Iron",50), new RequirementConfig("Wood",100), new RequirementConfig("Resin",40)
+            new DragonKingdomRegistration("DP_Throne","Dragon Pen Throne", new[]{
+                new RequirementConfig("TrophyDragonQueen",1), new RequirementConfig("TrophySerpent",1), new RequirementConfig("Bronze",50), new RequirementConfig("Coins",500)
             },"","dragonkingdom"),
 
                                       // 15.
-            new DragonKingdomRegistration("DP_B_Throne","Dragon Throne Large", new[]{
-                new RequirementConfig("Stone",250), new RequirementConfig("Iron",100), new RequirementConfig("Resin",40)
+            new DragonKingdomRegistration("DP_B_Throne","Dragon Pen Throne Large", new[]{
+                new RequirementConfig("TrophyDragonQueen",1), new RequirementConfig("TrophyFader",1), new RequirementConfig("Bronze",200), new RequirementConfig("Coins",2000)
             },"","dragonkingdom"),
         };
 
@@ -264,35 +264,102 @@ namespace DragonKeep
                 return reg.Requirements;
             }
 
-            List<RequirementConfig> configuredRequirements = new List<RequirementConfig>();
-            string section = "Build Cost - " + reg.PrefabName;
+            string defaultRequirements = FormatRequirements(reg.Requirements);
+            ConfigEntry<string> configuredRequirements = DragonKeep.ModConfig.Bind(
+                "Build Costs",
+                reg.PrefabName,
+                defaultRequirements,
+                "Build cost format: [Item][Amount][Item][Amount]. Maximum 4 requirements.");
 
-            for (int slot = 0; slot < 4; slot++)
+            RequirementConfig[] parsedRequirements;
+            if (TryParseRequirements(configuredRequirements.Value, out parsedRequirements))
             {
-                string defaultItem = slot < reg.Requirements.Length ? reg.Requirements[slot].Item : "";
-                int defaultAmount = slot < reg.Requirements.Length ? reg.Requirements[slot].Amount : 0;
-
-                ConfigEntry<string> item = DragonKeep.ModConfig.Bind(
-                    section,
-                    "Requirement " + (slot + 1) + " Item",
-                    defaultItem,
-                    "Valheim prefab name of the required item. This slot is ignored when its amount is 0.");
-
-                ConfigEntry<int> amount = DragonKeep.ModConfig.Bind(
-                    section,
-                    "Requirement " + (slot + 1) + " Amount",
-                    defaultAmount,
-                    new ConfigDescription(
-                        "Required amount. Set to 0 to disable this requirement slot.",
-                        new AcceptableValueRange<int>(0, 999999)));
-
-                if (amount.Value > 0 && !string.IsNullOrWhiteSpace(item.Value))
-                {
-                    configuredRequirements.Add(new RequirementConfig(item.Value.Trim(), amount.Value));
-                }
+                return parsedRequirements;
             }
 
-            return configuredRequirements.ToArray();
+            Debug.LogWarning($"[DragonKeep] Invalid build cost for {reg.PrefabName}: {configuredRequirements.Value}. Using default: {defaultRequirements}");
+            return reg.Requirements;
+        }
+
+        private static string FormatRequirements(RequirementConfig[] requirements)
+        {
+            if (requirements == null || requirements.Length == 0)
+            {
+                return "";
+            }
+
+            return string.Concat(requirements.Take(4).Select(requirement =>
+                "[" + requirement.Item + "][" + requirement.Amount + "]"));
+        }
+
+        private static bool TryParseRequirements(string value, out RequirementConfig[] requirements)
+        {
+            List<RequirementConfig> parsedRequirements = new List<RequirementConfig>();
+            requirements = parsedRequirements.ToArray();
+
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            List<string> values = new List<string>();
+            int position = 0;
+
+            while (position < value.Length)
+            {
+                while (position < value.Length && char.IsWhiteSpace(value[position]))
+                {
+                    position++;
+                }
+
+                if (position >= value.Length)
+                {
+                    break;
+                }
+
+                if (value[position] != '[')
+                {
+                    return false;
+                }
+
+                int closingBracket = value.IndexOf(']', position + 1);
+                if (closingBracket < 0)
+                {
+                    return false;
+                }
+
+                values.Add(value.Substring(position + 1, closingBracket - position - 1).Trim());
+                position = closingBracket + 1;
+            }
+
+            if (values.Count == 0 || values.Count % 2 != 0 || values.Count > 8)
+            {
+                return false;
+            }
+
+            for (int index = 0; index < values.Count; index += 2)
+            {
+                int amount;
+                string itemName = values[index];
+
+                if (string.IsNullOrWhiteSpace(itemName) ||
+                    !int.TryParse(values[index + 1], out amount) ||
+                    amount <= 0)
+                {
+                    return false;
+                }
+
+                GameObject itemPrefab = PrefabManager.Instance.GetPrefab(itemName);
+                if (itemPrefab == null || itemPrefab.GetComponent<ItemDrop>() == null)
+                {
+                    return false;
+                }
+
+                parsedRequirements.Add(new RequirementConfig(itemName, amount));
+            }
+
+            requirements = parsedRequirements.ToArray();
+            return true;
         }
 
         private static void PrepareEternalBuildingPrefab(GameObject prefab)
@@ -570,6 +637,9 @@ namespace DragonKeep
 
             GameObject mainGateOpenSfx = bundle != null ? bundle.LoadAsset<GameObject>("sfx_M_Dragongate_Open") : null;
             GameObject mainGateCloseSfx = bundle != null ? bundle.LoadAsset<GameObject>("sfx_M_Dragongate_Close") : null;
+            Door vanillaDoor = GetVanillaDoor();
+            EffectList vanillaDoorOpenEffects = vanillaDoor != null ? CopyEffectList(vanillaDoor.m_openEffects) : null;
+            EffectList vanillaDoorCloseEffects = vanillaDoor != null ? CopyEffectList(vanillaDoor.m_closeEffects) : null;
 
             if (configureGroundDoors && mainGateOpenSfx == null)
             {
@@ -579,6 +649,11 @@ namespace DragonKeep
             if (configureGroundDoors && mainGateCloseSfx == null)
             {
                 Debug.LogWarning("[DragonKeep] Missing DragonPen main gate close SFX prefab: sfx_M_Dragongate_Close");
+            }
+
+            if ((configureGroundDoors || configureRoofDoor) && vanillaDoor == null)
+            {
+                Debug.LogWarning("[DragonKeep] Valheim wood_door prefab was not available for child-door effects.");
             }
 
             if (configureGroundDoors)
@@ -611,7 +686,7 @@ namespace DragonKeep
                     }
                     else
                     {
-                        ConfigureChildDoor(doorTransform.gameObject, rootZNetView, doorName, null, null);
+                        ConfigureVanillaChildDoor(doorTransform.gameObject, rootZNetView, doorName, vanillaDoorOpenEffects, vanillaDoorCloseEffects);
                     }
                 }
             }
@@ -625,7 +700,7 @@ namespace DragonKeep
                 }
                 else
                 {
-                    CustomChildDoor roofDoor = ConfigureChildDoor(roofDoorTransform.gameObject, rootZNetView, "Roof_Door", null, null);
+                    CustomChildDoor roofDoor = ConfigureVanillaChildDoor(roofDoorTransform.gameObject, rootZNetView, "Roof_Door", vanillaDoorOpenEffects, vanillaDoorCloseEffects);
 
                     if (roofDoor != null)
                     {
@@ -637,6 +712,33 @@ namespace DragonKeep
                     RoofDoorAutoOpenerInstaller.Apply(roofDoorTransform.gameObject, rootZNetView);
                 }
             }
+        }
+
+        private static Door GetVanillaDoor()
+        {
+            GameObject woodDoorPrefab = PrefabManager.Instance.GetPrefab("wood_door");
+            return woodDoorPrefab != null ? woodDoorPrefab.GetComponent<Door>() : null;
+        }
+
+        private static CustomChildDoor ConfigureVanillaChildDoor(GameObject doorObject, ZNetView rootZNetView, string doorID, EffectList openEffects, EffectList closeEffects)
+        {
+            CustomChildDoor customDoor = ConfigureChildDoor(doorObject, rootZNetView, doorID, null, null);
+            if (customDoor == null)
+            {
+                return null;
+            }
+
+            if (openEffects != null)
+            {
+                customDoor.m_openEffects = CopyEffectList(openEffects);
+            }
+
+            if (closeEffects != null)
+            {
+                customDoor.m_closeEffects = CopyEffectList(closeEffects);
+            }
+
+            return customDoor;
         }
 
         private static CustomChildDoor ConfigureChildDoor(GameObject doorObject, ZNetView rootZNetView, string doorID, GameObject openSfxPrefab, GameObject closeSfxPrefab)
@@ -710,6 +812,15 @@ namespace DragonKeep
                 }
             }
 
+            Door vanillaDoor = GetVanillaDoor();
+            EffectList vanillaDoorOpenEffects = vanillaDoor != null ? CopyEffectList(vanillaDoor.m_openEffects) : null;
+            EffectList vanillaDoorCloseEffects = vanillaDoor != null ? CopyEffectList(vanillaDoor.m_closeEffects) : null;
+
+            if (vanillaDoor == null)
+            {
+                Debug.LogWarning("[DragonKeep] Valheim wood_door prefab was not available for Corner Tower door effects.");
+            }
+
             string[] doorNames =
             {
                 "Left_F",
@@ -725,7 +836,7 @@ namespace DragonKeep
                     continue;
                 }
 
-                ConfigureChildDoor(doorTransform.gameObject, rootZNetView, doorName, null, null);
+                ConfigureVanillaChildDoor(doorTransform.gameObject, rootZNetView, doorName, vanillaDoorOpenEffects, vanillaDoorCloseEffects);
             }
         }
 
