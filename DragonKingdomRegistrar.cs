@@ -364,8 +364,6 @@ namespace DragonKeep
 
         private static void PrepareEternalBuildingPrefab(GameObject prefab)
         {
-            HashSet<GameObject> configuredSupportColliders = CaptureConfiguredSupportColliders(prefab);
-
             EnsureSolidColliders(prefab);
             RemoveComponentsInChildren<Destructible>(prefab);
             RemoveComponentsInChildren<TreeLog>(prefab);
@@ -376,8 +374,6 @@ namespace DragonKeep
             RemoveComponentsInChildren<StaticPhysics>(prefab);
             RemoveComponentsInChildren<ZSyncTransform>(prefab);
 
-            SetLayerRecursively(prefab, "piece");
-            ApplyEternalSupportColliderLayer(prefab, configuredSupportColliders);
         }
 
         private static HashSet<GameObject> CaptureConfiguredSupportColliders(GameObject prefab)
@@ -637,9 +633,8 @@ namespace DragonKeep
 
             GameObject mainGateOpenSfx = bundle != null ? bundle.LoadAsset<GameObject>("sfx_M_Dragongate_Open") : null;
             GameObject mainGateCloseSfx = bundle != null ? bundle.LoadAsset<GameObject>("sfx_M_Dragongate_Close") : null;
-            Door vanillaDoor = GetVanillaDoor();
-            EffectList vanillaDoorOpenEffects = vanillaDoor != null ? CopyEffectList(vanillaDoor.m_openEffects) : null;
-            EffectList vanillaDoorCloseEffects = vanillaDoor != null ? CopyEffectList(vanillaDoor.m_closeEffects) : null;
+            GameObject smallDoorOpenSfx = bundle != null ? bundle.LoadAsset<GameObject>("v2_sfx_door_open") : null;
+            GameObject smallDoorCloseSfx = bundle != null ? bundle.LoadAsset<GameObject>("v2_sfx_door_close") : null;
 
             if (configureGroundDoors && mainGateOpenSfx == null)
             {
@@ -651,9 +646,14 @@ namespace DragonKeep
                 Debug.LogWarning("[DragonKeep] Missing DragonPen main gate close SFX prefab: sfx_M_Dragongate_Close");
             }
 
-            if ((configureGroundDoors || configureRoofDoor) && vanillaDoor == null)
+            if ((configureGroundDoors || configureRoofDoor) && smallDoorOpenSfx == null)
             {
-                Debug.LogWarning("[DragonKeep] Valheim wood_door prefab was not available for child-door effects.");
+                Debug.LogWarning("[DragonKeep] Missing DragonPen small door open SFX prefab: v2_sfx_door_open");
+            }
+
+            if ((configureGroundDoors || configureRoofDoor) && smallDoorCloseSfx == null)
+            {
+                Debug.LogWarning("[DragonKeep] Missing DragonPen small door close SFX prefab: v2_sfx_door_close");
             }
 
             if (configureGroundDoors)
@@ -686,7 +686,7 @@ namespace DragonKeep
                     }
                     else
                     {
-                        ConfigureVanillaChildDoor(doorTransform.gameObject, rootZNetView, doorName, vanillaDoorOpenEffects, vanillaDoorCloseEffects);
+                        ConfigureChildDoor(doorTransform.gameObject, rootZNetView, doorName, smallDoorOpenSfx, smallDoorCloseSfx);
                     }
                 }
             }
@@ -700,7 +700,7 @@ namespace DragonKeep
                 }
                 else
                 {
-                    CustomChildDoor roofDoor = ConfigureVanillaChildDoor(roofDoorTransform.gameObject, rootZNetView, "Roof_Door", vanillaDoorOpenEffects, vanillaDoorCloseEffects);
+                    CustomChildDoor roofDoor = ConfigureChildDoor(roofDoorTransform.gameObject, rootZNetView, "Roof_Door", smallDoorOpenSfx, smallDoorCloseSfx);
 
                     if (roofDoor != null)
                     {
@@ -712,33 +712,6 @@ namespace DragonKeep
                     RoofDoorAutoOpenerInstaller.Apply(roofDoorTransform.gameObject, rootZNetView);
                 }
             }
-        }
-
-        private static Door GetVanillaDoor()
-        {
-            GameObject woodDoorPrefab = PrefabManager.Instance.GetPrefab("wood_door");
-            return woodDoorPrefab != null ? woodDoorPrefab.GetComponent<Door>() : null;
-        }
-
-        private static CustomChildDoor ConfigureVanillaChildDoor(GameObject doorObject, ZNetView rootZNetView, string doorID, EffectList openEffects, EffectList closeEffects)
-        {
-            CustomChildDoor customDoor = ConfigureChildDoor(doorObject, rootZNetView, doorID, null, null);
-            if (customDoor == null)
-            {
-                return null;
-            }
-
-            if (openEffects != null)
-            {
-                customDoor.m_openEffects = CreatePlayableDoorEffectList(openEffects);
-            }
-
-            if (closeEffects != null)
-            {
-                customDoor.m_closeEffects = CreatePlayableDoorEffectList(closeEffects);
-            }
-
-            return customDoor;
         }
 
         private static CustomChildDoor ConfigureChildDoor(GameObject doorObject, ZNetView rootZNetView, string doorID, GameObject openSfxPrefab, GameObject closeSfxPrefab)
@@ -770,9 +743,9 @@ namespace DragonKeep
                 customDoor.m_invertedOpenClosedText = sourceDoor.m_invertedOpenClosedText;
                 customDoor.m_checkGuardStone = sourceDoor.m_checkGuardStone;
                 customDoor.m_openEnable = sourceDoor.m_openEnable;
-                customDoor.m_openEffects = CopyEffectList(sourceDoor.m_openEffects);
-                customDoor.m_closeEffects = CopyEffectList(sourceDoor.m_closeEffects);
-                customDoor.m_lockedEffects = CopyEffectList(sourceDoor.m_lockedEffects);
+                customDoor.m_openEffects = sourceDoor.m_openEffects;
+                customDoor.m_closeEffects = sourceDoor.m_closeEffects;
+                customDoor.m_lockedEffects = sourceDoor.m_lockedEffects;
             }
             else
             {
@@ -812,13 +785,17 @@ namespace DragonKeep
                 }
             }
 
-            Door vanillaDoor = GetVanillaDoor();
-            EffectList vanillaDoorOpenEffects = vanillaDoor != null ? CopyEffectList(vanillaDoor.m_openEffects) : null;
-            EffectList vanillaDoorCloseEffects = vanillaDoor != null ? CopyEffectList(vanillaDoor.m_closeEffects) : null;
+            GameObject smallDoorOpenSfx = bundle != null ? bundle.LoadAsset<GameObject>("v2_sfx_door_open") : null;
+            GameObject smallDoorCloseSfx = bundle != null ? bundle.LoadAsset<GameObject>("v2_sfx_door_close") : null;
 
-            if (vanillaDoor == null)
+            if (smallDoorOpenSfx == null)
             {
-                Debug.LogWarning("[DragonKeep] Valheim wood_door prefab was not available for Corner Tower door effects.");
+                Debug.LogWarning("[DragonKeep] Missing Corner Tower door open SFX prefab: v2_sfx_door_open");
+            }
+
+            if (smallDoorCloseSfx == null)
+            {
+                Debug.LogWarning("[DragonKeep] Missing Corner Tower door close SFX prefab: v2_sfx_door_close");
             }
 
             string[] doorNames =
@@ -836,44 +813,8 @@ namespace DragonKeep
                     continue;
                 }
 
-                ConfigureVanillaChildDoor(doorTransform.gameObject, rootZNetView, doorName, vanillaDoorOpenEffects, vanillaDoorCloseEffects);
+                ConfigureChildDoor(doorTransform.gameObject, rootZNetView, doorName, smallDoorOpenSfx, smallDoorCloseSfx);
             }
-        }
-
-        private static EffectList CreatePlayableDoorEffectList(EffectList source)
-        {
-            EffectList playableEffects = new EffectList();
-            List<EffectList.EffectData> effectPrefabs = new List<EffectList.EffectData>();
-
-            if (source?.m_effectPrefabs != null)
-            {
-                foreach (EffectList.EffectData sourceEffect in source.m_effectPrefabs)
-                {
-                    if (sourceEffect == null || sourceEffect.m_prefab == null)
-                    {
-                        continue;
-                    }
-
-                    effectPrefabs.Add(new EffectList.EffectData
-                    {
-                        m_prefab = sourceEffect.m_prefab,
-                        m_enabled = true,
-                        m_variant = -1
-                    });
-                }
-            }
-
-            playableEffects.m_effectPrefabs = effectPrefabs.ToArray();
-            return playableEffects;
-        }
-
-        private static EffectList CopyEffectList(EffectList source)
-        {
-            EffectList copy = new EffectList();
-            copy.m_effectPrefabs = source?.m_effectPrefabs != null
-                ? source.m_effectPrefabs.ToArray()
-                : new EffectList.EffectData[0];
-            return copy;
         }
 
         private static EffectList CreateSingleEffectList(GameObject effectPrefab)
