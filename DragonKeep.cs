@@ -67,6 +67,10 @@ namespace DragonKeep
     {
         public EffectList m_destroyedEffect = new EffectList();
 
+        public GameObject[] m_fragmentRoots = new GameObject[0];
+
+        public bool m_createFragments = true;
+
         private bool effectsPlayed;
 
         public void Play()
@@ -77,7 +81,31 @@ namespace DragonKeep
             }
 
             effectsPlayed = true;
-            m_destroyedEffect?.Create(transform.position, transform.rotation);
+            m_destroyedEffect?.Create(transform.position, transform.rotation, transform);
+
+            if (!m_createFragments)
+            {
+                return;
+            }
+
+            if (m_fragmentRoots != null && m_fragmentRoots.Length > 0)
+            {
+                for (int i = 0; i < m_fragmentRoots.Length; i++)
+                {
+                    GameObject fragmentRoot = m_fragmentRoots[i];
+                    if (fragmentRoot == null)
+                    {
+                        continue;
+                    }
+
+                    fragmentRoot.SetActive(true);
+                    Destructible.CreateFragments(fragmentRoot, false);
+                }
+
+                return;
+            }
+
+            Destructible.CreateFragments(gameObject);
         }
     }
 
