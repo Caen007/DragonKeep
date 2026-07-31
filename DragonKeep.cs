@@ -2,6 +2,7 @@
 using System.IO;
 using BepInEx;
 using BepInEx.Configuration;
+using HarmonyLib;
 using UnityEngine;
 using Jotunn.Managers;
 
@@ -22,6 +23,7 @@ namespace DragonKeep
         private void Awake()
         {
             ModConfig = Config;
+            new Harmony(PluginGUID).PatchAll();
 
             string resourcePath = "DragonKeep.dragonpen";
             dragonPenBundle = EmbeddedAssetBundleLoader.LoadBundle(resourcePath);
@@ -58,6 +60,39 @@ namespace DragonKeep
                 stream.Read(buffer, 0, buffer.Length);
                 return AssetBundle.LoadFromMemory(buffer);
             }
+        }
+    }
+
+    public class DragonKeepRemovalEffects : MonoBehaviour
+    {
+        public EffectList m_destroyedEffect = new EffectList();
+
+        private bool effectsPlayed;
+
+        public void Play()
+        {
+            if (effectsPlayed)
+            {
+                return;
+            }
+
+            effectsPlayed = true;
+            m_destroyedEffect?.Create(transform.position, transform.rotation);
+        }
+    }
+
+    [HarmonyPatch(typeof(ZNetScene), nameof(ZNetScene.Destroy), new[] { typeof(GameObject) })]
+    internal static class DragonKeepZNetSceneDestroyPatch
+    {
+        private static void Prefix(GameObject __0)
+        {
+            if (__0 == null)
+            {
+                return;
+            }
+
+            DragonKeepRemovalEffects removalEffects = __0.GetComponent<DragonKeepRemovalEffects>();
+            removalEffects?.Play();
         }
     }
 }

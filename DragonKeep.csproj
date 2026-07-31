@@ -14,6 +14,9 @@
 	  <EmbeddedResource Include="dragonpen" />
 	</ItemGroup>
 	<ItemGroup>
+	  <Reference Include="0Harmony">
+	    <HintPath>Libs\0Harmony.dll</HintPath>
+	  </Reference>
 	  <Reference Include="assembly_valheim">
 	    <HintPath>Libs\assembly_valheim.dll</HintPath>
 	  </Reference>

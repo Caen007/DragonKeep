@@ -36,6 +36,8 @@ namespace DragonKeep
 
         private ZNetView m_nview;
 
+        private CustomDoorSound m_doorSound;
+
         private uint m_lastDataRevision = uint.MaxValue;
 
         private string m_stateKey;
@@ -44,6 +46,10 @@ namespace DragonKeep
 
         private string m_autoRpcName;
 
+        private string m_registeredRpcName;
+
+        private string m_registeredAutoRpcName;
+
         private static Type localizationType;
 
         private static FieldInfo localizationInstanceField;
@@ -51,6 +57,14 @@ namespace DragonKeep
         private static MethodInfo localizationLocalizeMethod;
 
         private void Awake()
+        {
+            if (m_rootZNetView != null && !string.IsNullOrEmpty(m_doorID))
+            {
+                InitializeAfterConfiguration();
+            }
+        }
+
+        public void InitializeAfterConfiguration()
         {
             if (string.IsNullOrEmpty(m_doorID))
             {
@@ -66,7 +80,14 @@ namespace DragonKeep
                 m_animator = FindAnimatorComponent(gameObject);
             }
 
-            m_nview = m_rootZNetView != null ? m_rootZNetView : GetComponentInParent<ZNetView>();
+            ZNetView resolvedZNetView = m_rootZNetView != null ? m_rootZNetView : GetComponentInParent<ZNetView>();
+
+            if (m_nview != resolvedZNetView)
+            {
+                m_nview = resolvedZNetView;
+                m_registeredRpcName = null;
+                m_registeredAutoRpcName = null;
+            }
 
             if (m_nview == null)
             {
@@ -74,10 +95,22 @@ namespace DragonKeep
                 return;
             }
 
-            m_nview.Register<bool>(m_rpcName, RPC_UseDoor);
-            m_nview.Register<int>(m_autoRpcName, RPC_AutoSetDoor);
+            if (m_registeredRpcName != m_rpcName)
+            {
+                m_nview.Register<bool>(m_rpcName, RPC_UseDoor);
+                m_registeredRpcName = m_rpcName;
+            }
 
-            InvokeRepeating(nameof(UpdateState), 0f, 0.2f);
+            if (m_registeredAutoRpcName != m_autoRpcName)
+            {
+                m_nview.Register<int>(m_autoRpcName, RPC_AutoSetDoor);
+                m_registeredAutoRpcName = m_autoRpcName;
+            }
+
+            if (!IsInvoking(nameof(UpdateState)))
+            {
+                InvokeRepeating(nameof(UpdateState), 0f, 0.2f);
+            }
         }
 
         private string BuildDoorID()
@@ -170,11 +203,11 @@ namespace DragonKeep
                 {
                     if (state != 0)
                     {
-                        m_openEffects.Create(transform.position, transform.rotation);
+                        GetDoorSound().PlayOpen();
                     }
                     else
                     {
-                        m_closeEffects.Create(transform.position, transform.rotation);
+                        GetDoorSound().PlayClose();
                     }
 
                     SetAnimatorInteger(m_animator, m_animatorStateParameter, state);
@@ -185,6 +218,32 @@ namespace DragonKeep
             {
                 m_openEnable.SetActive(state != 0);
             }
+        }
+
+        public void SetDoorSound(CustomDoorSound doorSound)
+        {
+            m_doorSound = doorSound;
+
+            if (m_doorSound != null)
+            {
+                m_doorSound.Configure(this);
+            }
+        }
+
+        private CustomDoorSound GetDoorSound()
+        {
+            if (m_doorSound == null)
+            {
+                m_doorSound = GetComponent<CustomDoorSound>();
+            }
+
+            if (m_doorSound == null)
+            {
+                m_doorSound = gameObject.AddComponent<CustomDoorSound>();
+            }
+
+            m_doorSound.Configure(this);
+            return m_doorSound;
         }
 
         private bool CanInteract()
