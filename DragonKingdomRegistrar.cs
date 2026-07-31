@@ -32,6 +32,10 @@ namespace DragonKeep
     {
         private static bool wasAlreadyRegistered = false; // HOTFIX stays untouched
 
+        private const string DefaultHammerTab = "Dragon Keep";
+
+        private static ConfigEntry<string> hammerTabConfig;
+
         public static readonly List<DragonKingdomRegistration> AllRegistrations = new()
         {
             // ---------------------- Dragon Kingdom ----------------------
@@ -118,9 +122,24 @@ namespace DragonKeep
         private static string CategoryToTab(string category) =>
             category.ToLower() switch
             {
-                "dragonkingdom" => "Dragon Keep",
+                "dragonkingdom" => GetConfiguredHammerTab(),
                 _ => category
             };
+
+        private static string GetConfiguredHammerTab()
+        {
+            if (hammerTabConfig == null && DragonKeep.ModConfig != null)
+            {
+                hammerTabConfig = DragonKeep.ModConfig.Bind(
+                    "General",
+                    "Hammer Tab",
+                    DefaultHammerTab,
+                    "Hammer build-menu tab used for every Dragon Keep prefab. Restart Valheim after changing this setting.");
+            }
+
+            string configuredTab = hammerTabConfig?.Value;
+            return string.IsNullOrWhiteSpace(configuredTab) ? DefaultHammerTab : configuredTab.Trim();
+        }
 
         public static void RegisterAllPieces(AssetBundle bundle)
         {
