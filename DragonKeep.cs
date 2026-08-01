@@ -13,7 +13,7 @@ namespace DragonKeep
     public class DragonKeep : BaseUnityPlugin
     {
         public const string PluginGUID = "DragonKeep";
-        public const string PluginName = "Dragon Keep";
+        public const string PluginName = "Ravenwood Dragon Keep";
         public const string PluginVersion = "1.0.0";
 
         internal static ConfigFile ModConfig;

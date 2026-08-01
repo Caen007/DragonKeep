@@ -32,7 +32,7 @@ namespace DragonKeep
     {
         private static bool wasAlreadyRegistered = false; // HOTFIX stays untouched
 
-        private const string DefaultHammerTab = "Dragon Keep";
+        private const string DefaultHammerTab = "Ravenwood";
 
         private static ConfigEntry<string> hammerTabConfig;
 
@@ -134,7 +134,7 @@ namespace DragonKeep
                     "General",
                     "Hammer Tab",
                     DefaultHammerTab,
-                    "Hammer build-menu tab used for every Dragon Keep prefab. Restart Valheim after changing this setting.");
+                    "Hammer build-menu tab used for every Ravenwood Dragon Keep prefab. Restart Valheim after changing this setting.");
             }
 
             string configuredTab = hammerTabConfig?.Value;
